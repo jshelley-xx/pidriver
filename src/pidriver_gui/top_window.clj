@@ -40,27 +40,17 @@
 
 
 
-
-(defn fetch-files [m]
-  (let [
-    url (get-url m "/omxplayer-ui/servers/piloader/")
-    json (utils/get-json url)
-    s (map #(%1 "file") (json "content"))]
-    (.debug LOG json)
-    (into [] s))
-  )
-
-
-
-
-
-
-
 (defn make-video-list-model [m]
-  (let [files (-> (fetch-files m) sort)]
-    (listbox
-      :id (make-id "file-list" m)
-      :model files)))
+  (utils/get-json
+      (get-url m "/omxplayer-ui/servers/piloader/")
+      (fn [json]
+        (let [s (map #(%1 "file") (json "content"))]
+        (listbox
+          :id (make-id "file-list" m)
+          :model (-> (into [] s) sort))))))
+
+
+
 
 
 
@@ -88,7 +78,7 @@
 
                     running (j "running")
                   ]
-                  (set-ready-icon frame )
+                  (set-ready-icon frame)
                     (if running
                       (do
                         ;running!
@@ -117,6 +107,7 @@
                         (config! file-list :enabled? true)
 
                         (config! play-button :enabled? true)
+                        (config! pause-button :enabled? false)
                         (config! stop-button :enabled? false)
 
                         )))))
@@ -187,17 +178,21 @@
 
                (listen play-button :action
                  (fn [e]
-                   (set-hourglass-icon (.getSource e))
                    (let [
                      src-cmp (.getSource e)
                      wrapper-panel (fetch-up src-cmp :id :wrapper-frame)
                      file-list (select wrapper-panel [(make-selector "file-list" m)])
                      to-play (selection file-list)
-                     url (get-url m (str "/omxplayer-ui/servers/piloader/" to-play))
                      ]
-                   (utils/post-json
-                     url
-                     {"file" (str "piloader/" to-play) "command" "play"}))))
+                    (if
+                      (not-empty to-play)
+                      (do
+                       (set-hourglass-icon (.getSource e))
+                       (utils/post-json
+                         (get-url m (str "/omxplayer-ui/servers/piloader/" to-play))
+                         {"file" (str "piloader/" to-play) "command" "play"}))
+                      (alert "Please Pick a video to play"))
+                     )))
                (listen pause-button :action
                  (fn [e]
                    (set-hourglass-icon (.getSource e))
