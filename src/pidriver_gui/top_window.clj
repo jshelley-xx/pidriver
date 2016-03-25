@@ -88,6 +88,7 @@
 
                     running (j "running")
                   ]
+                  (set-ready-icon frame )
                     (if running
                       (do
                         ;running!
@@ -186,6 +187,7 @@
 
                (listen play-button :action
                  (fn [e]
+                   (set-hourglass-icon (.getSource e))
                    (let [
                      src-cmp (.getSource e)
                      wrapper-panel (fetch-up src-cmp :id :wrapper-frame)
@@ -198,11 +200,13 @@
                      {"file" (str "piloader/" to-play) "command" "play"}))))
                (listen pause-button :action
                  (fn [e]
+                   (set-hourglass-icon (.getSource e))
                    (utils/post-json
                      (get-url m (str "/omxplayer-ui/control"))
                      {"file" "null" "command" "pause"})))
                (listen stop-button :action
                  (fn [e]
+                   (set-hourglass-icon (.getSource e))
                    (utils/post-json
                      (get-url m (str "/omxplayer-ui/control"))
                      {"file" "null" "command" "stop"})))
